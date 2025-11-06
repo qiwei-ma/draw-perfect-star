@@ -7,7 +7,7 @@
     "orientation": "any",
     "scope": "/",
     "start_url": "/",
-    "description": "挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。",
+    "description": "挑战自己，画出一个完美的五角星！",
     "icons": [
       {
         "src": "/icons/star-64x64.png",

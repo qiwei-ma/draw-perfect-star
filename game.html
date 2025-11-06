@@ -160,7 +160,7 @@
     
     <div class="container">
         <h1>画一个完美的五角星 ⭐</h1>
-        <p class="subtitle">挑战你的绘画技巧！</p>
+        <p class="subtitle">加油！</p>
         
         <div style="position: relative;">
             <canvas id="gameCanvas" width="600" height="600"></canvas>
@@ -173,7 +173,7 @@
                 🖱️ 按住鼠标左键或触摸屏幕，尝试画出完美的五角星！<br>
                 🎯 越接近完美形状，得分越高！
             </div>
-            <button class="btn" onclick="clearCanvas()">🔄 重新开始</button>
+            <!-- <button class="btn" onclick="clearCanvas()">🔄 重新开始</button> -->
         </div>
     </div>
 
@@ -340,35 +340,266 @@
             displayScore(score);
         }
         
+        // ========== 多维度评分系统 ==========
+        
         function calculateScore() {
             if (points.length < 10) return 0;
             
-            // 计算用户绘制的形状与完美五角星的相似度
-            const samplePoints = sampleUserPoints(points, perfectStar.length);
+            // 先将用户绘制的形状归一化（自适应大小和位置）
+            const normalizedUser = normalizeShape(points);
+            const normalizedPerfect = normalizeShape(perfectStar);
             
-            let totalDistance = 0;
-            let maxPossibleDistance = 0;
+            // 1. 形状闭合度 (20%)
+            const closureScore = calculateClosureScore(points);
             
-            for (let i = 0; i < perfectStar.length; i++) {
-                const perfect = perfectStar[i];
-                const user = samplePoints[i];
-                
-                const distance = Math.sqrt(
-                    Math.pow(perfect.x - user.x, 2) + 
-                    Math.pow(perfect.y - user.y, 2)
-                );
-                
-                totalDistance += distance;
-                maxPossibleDistance += 300; // 降低严格度，从200改为300
-            }
+            // 2. 路径覆盖度 (25%) - 检查是否画了完整的五角星
+            const coverageScore = calculateCoverageScore(normalizedUser, normalizedPerfect);
             
-            // 使用更宽松的评分曲线
-            const rawAccuracy = Math.max(0, 100 - (totalDistance / maxPossibleDistance * 100));
-            // 应用平滑曲线，提高得分
-            const accuracy = Math.pow(rawAccuracy / 100, 0.7) * 100;
-            return Math.round(accuracy * 10) / 10;
+            // 3. 形状相似度 (40%) - 归一化后的距离匹配
+            const shapeScore = calculateShapeScore(normalizedUser, normalizedPerfect);
+            
+            // 4. 角度准确度 (15%) - 检查拐点角度
+            const angleScore = calculateAngleScore(points);
+            
+            // 加权总分
+            const finalScore = 
+                closureScore * 0.20 + 
+                coverageScore * 0.25 + 
+                shapeScore * 0.40 + 
+                angleScore * 0.15;
+            
+            return Math.round(Math.max(0, Math.min(100, finalScore)) * 10) / 10;
         }
         
+        // 归一化形状：将形状缩放到统一大小，并居中
+        function normalizeShape(points) {
+            if (points.length === 0) return [];
+            
+            // 找到边界框
+            let minX = Infinity, minY = Infinity;
+            let maxX = -Infinity, maxY = -Infinity;
+            
+            points.forEach(p => {
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
+            });
+            
+            const width = maxX - minX;
+            const height = maxY - minY;
+            const scale = Math.max(width, height);
+            
+            if (scale === 0) return points;
+            
+            // 归一化到 [0, 1] 范围，并居中
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            
+            return points.map(p => ({
+                x: (p.x - centerX) / scale,
+                y: (p.y - centerY) / scale
+            }));
+        }
+        
+        // 1. 闭合度评分 (0-100)
+        function calculateClosureScore(points) {
+            if (points.length < 2) return 0;
+            
+            const startPoint = points[0];
+            const endPoint = points[points.length - 1];
+            
+            const distance = Math.sqrt(
+                Math.pow(endPoint.x - startPoint.x, 2) + 
+                Math.pow(endPoint.y - startPoint.y, 2)
+            );
+            
+            // 计算平均线段长度作为参考
+            let totalLength = 0;
+            for (let i = 1; i < points.length; i++) {
+                totalLength += Math.sqrt(
+                    Math.pow(points[i].x - points[i-1].x, 2) + 
+                    Math.pow(points[i].y - points[i-1].y, 2)
+                );
+            }
+            const avgSegmentLength = totalLength / (points.length - 1);
+            
+            // 闭合距离应该小于平均线段长度的3倍
+            const maxAllowedDistance = avgSegmentLength * 3;
+            const closureRatio = Math.max(0, 1 - distance / maxAllowedDistance);
+            
+            return closureRatio * 100;
+        }
+        
+        // 2. 路径覆盖度评分 (0-100)
+        function calculateCoverageScore(normalizedUser, normalizedPerfect) {
+            if (normalizedUser.length < 10) return 0;
+            
+            // 将完美五角星分成10个关键区域（5个外顶点 + 5个内顶点）
+            const keyPoints = [];
+            for (let i = 0; i < normalizedPerfect.length; i++) {
+                keyPoints.push(normalizedPerfect[i]);
+            }
+            
+            // 检查用户路径是否接近这些关键点
+            let coveredPoints = 0;
+            const threshold = 0.15; // 归一化后的阈值
+            
+            keyPoints.forEach(keyPoint => {
+                let minDistance = Infinity;
+                normalizedUser.forEach(userPoint => {
+                    const dist = Math.sqrt(
+                        Math.pow(keyPoint.x - userPoint.x, 2) + 
+                        Math.pow(keyPoint.y - userPoint.y, 2)
+                    );
+                    minDistance = Math.min(minDistance, dist);
+                });
+                
+                if (minDistance < threshold) {
+                    coveredPoints++;
+                }
+            });
+            
+            return (coveredPoints / keyPoints.length) * 100;
+        }
+        
+        // 3. 形状相似度评分 (0-100)
+        function calculateShapeScore(normalizedUser, normalizedPerfect) {
+            if (normalizedUser.length < 10) return 0;
+            
+            // 采样到相同数量的点
+            const sampleCount = 50;
+            const sampledUser = sampleUserPoints(normalizedUser, sampleCount);
+            const sampledPerfect = sampleUserPoints(normalizedPerfect, sampleCount);
+            
+            // 使用动态时间规整(DTW)的简化版本
+            let totalDistance = 0;
+            
+            for (let i = 0; i < sampleCount; i++) {
+                let minDist = Infinity;
+                
+                // 为每个完美点找到最近的用户点（允许一定的顺序偏差）
+                const searchRange = Math.floor(sampleCount * 0.2); // 允许20%的偏差
+                for (let j = Math.max(0, i - searchRange); j < Math.min(sampleCount, i + searchRange + 1); j++) {
+                    const dist = Math.sqrt(
+                        Math.pow(sampledPerfect[i].x - sampledUser[j].x, 2) + 
+                        Math.pow(sampledPerfect[i].y - sampledUser[j].y, 2)
+                    );
+                    minDist = Math.min(minDist, dist);
+                }
+                
+                totalDistance += minDist;
+            }
+            
+            // 归一化距离
+            const avgDistance = totalDistance / sampleCount;
+            const maxAllowedDistance = 0.3; // 归一化后的最大容忍距离
+            
+            const similarity = Math.max(0, 1 - avgDistance / maxAllowedDistance);
+            return Math.pow(similarity, 0.8) * 100; // 应用曲线使评分更平滑
+        }
+        
+        // 4. 角度准确度评分 (0-100)
+        function calculateAngleScore(points) {
+            if (points.length < 20) return 0;
+            
+            // 检测拐点（方向变化大的点）
+            const corners = detectCorners(points);
+            
+            // 五角星应该有10个主要拐点（5个外角 + 5个内角）
+            const expectedCorners = 10;
+            const cornerCountScore = Math.min(corners.length / expectedCorners, 1.5) * 50;
+            
+            // 检查拐点的角度分布
+            const angleDistributionScore = analyzeAngleDistribution(corners) * 50;
+            
+            return cornerCountScore + angleDistributionScore;
+        }
+        
+        // 检测拐点
+        function detectCorners(points) {
+            const corners = [];
+            const windowSize = Math.max(5, Math.floor(points.length / 50));
+            
+            for (let i = windowSize; i < points.length - windowSize; i++) {
+                const before = points[i - windowSize];
+                const current = points[i];
+                const after = points[i + windowSize];
+                
+                // 计算角度变化
+                const angle1 = Math.atan2(current.y - before.y, current.x - before.x);
+                const angle2 = Math.atan2(after.y - current.y, after.x - current.x);
+                
+                let angleDiff = Math.abs(angle2 - angle1);
+                if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+                
+                // 如果角度变化大于60度，认为是拐点
+                if (angleDiff > Math.PI / 3) {
+                    corners.push({point: current, angle: angleDiff});
+                }
+            }
+            
+            // 合并相近的拐点
+            return mergeNearbyCorners(corners, points.length / 20);
+        }
+        
+        // 合并相近的拐点
+        function mergeNearbyCorners(corners, minDistance) {
+            if (corners.length === 0) return [];
+            
+            const merged = [corners[0]];
+            
+            for (let i = 1; i < corners.length; i++) {
+                const lastMerged = merged[merged.length - 1];
+                const current = corners[i];
+                
+                const dist = Math.sqrt(
+                    Math.pow(current.point.x - lastMerged.point.x, 2) + 
+                    Math.pow(current.point.y - lastMerged.point.y, 2)
+                );
+                
+                if (dist > minDistance) {
+                    merged.push(current);
+                }
+            }
+            
+            return merged;
+        }
+        
+        // 分析角度分布
+        function analyzeAngleDistribution(corners) {
+            if (corners.length < 5) return 0;
+            
+            // 五角星的角度应该相对均匀分布
+            const angles = [];
+            for (let i = 0; i < corners.length; i++) {
+                const current = corners[i].point;
+                const next = corners[(i + 1) % corners.length].point;
+                
+                const angle = Math.atan2(next.y - current.y, next.x - current.x);
+                angles.push(angle);
+            }
+            
+            // 计算角度分布的均匀性
+            angles.sort((a, b) => a - b);
+            
+            let totalVariance = 0;
+            const expectedGap = (2 * Math.PI) / corners.length;
+            
+            for (let i = 0; i < angles.length; i++) {
+                const nextAngle = i < angles.length - 1 ? angles[i + 1] : angles[0] + 2 * Math.PI;
+                const gap = nextAngle - angles[i];
+                const variance = Math.abs(gap - expectedGap);
+                totalVariance += variance;
+            }
+            
+            const avgVariance = totalVariance / angles.length;
+            const uniformity = Math.max(0, 1 - avgVariance / Math.PI);
+            
+            return uniformity;
+        }
+        
+        // 采样函数
         function sampleUserPoints(userPoints, targetCount) {
             const sampled = [];
             const step = userPoints.length / targetCount;
