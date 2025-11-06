@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="utf-8" />
+<title>画一个完美的五角星 💯 | 在线绘画游戏</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。免费在线玩，无需下载。" />
+<meta property="og:title" content="画一个完美的五角星 💯">
+<meta property="og:description" content="挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。">    
+<meta property="og:locale" content="zh-CN">
+<meta name="robots" content="index, follow" />
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://qiwei-ma.github.io/draw-perfect-star/">
+<meta property="og:site_name" content="画一个完美的五角星">
+<meta property="og:width" content="1000">
+<meta property="og:height" content="630">
+<meta property="og:image" content="https://qiwei-ma.github.io/draw-perfect-star/icons/star-192x192.png">
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="画一个完美的五角星 💯" />
+<meta name="twitter:description" content="挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。" />
+<meta name="twitter:image" content="https://qiwei-ma.github.io/draw-perfect-star/icons/star-192x192.png">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/star-64x64.png">
+<link rel="icon" type="image/png" sizes="96x96" href="icons/star-96x96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/star-192x192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/star-192x192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="canonical" href="https://qiwei-ma.github.io/draw-perfect-star/" />
+<meta name="msapplication-TileColor" content="#667eea">
+<meta name="theme-color" content="#667eea" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap');
+
+*, ::after, ::before {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 1.5rem 0;
+}
+
+.header-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    color: #667eea;
+}
+
+.logo-icon {
+    font-size: 2.5rem;
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero {
+    text-align: center;
+    color: white;
+    padding: 3rem 1rem;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    line-height: 1.2;
+}
+
+.hero p {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+}
+
+.game-preview {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    margin: 2rem auto;
+    max-width: 700px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-preview:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+}
+
+.game-preview:active {
+    transform: translateY(-2px);
+}
+
+.game-preview canvas {
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.feature h3 {
+    color: #667eea;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.feature p {
+    color: #666;
+}
+
+footer {
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    padding: 2rem 0;
+    text-align: center;
+    margin-top: 3rem;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+.footer-links {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.footer-links li {
+    display: inline;
+}
+
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .hero p {
+        font-size: 1.2rem;
+    }
+    
+    .btn-play {
+        font-size: 1.2rem;
+        padding: 1rem 2rem;
+    }
+    
+    .game-preview {
+        padding: 1rem;
+    }
+    
+    .features {
+        grid-template-columns: 1fr;
+    }
+}
+</style>    
+    	<script type="application/ld+json">
+        { 
+        "@context": "https://schema.org",
+        "@graph": [{ 
+        "@type": "Organization",
+        "@id": "https://qiwei-ma.github.io/draw-perfect-star/#organization",
+        "name": "画一个完美的五角星",
+        "url": "https://qiwei-ma.github.io/draw-perfect-star/",
+        "sameAs": []
+    },
+        { 
+        "@type": "WebSite",
+        "@id": "https://qiwei-ma.github.io/draw-perfect-star/#website",
+        "url": "https://qiwei-ma.github.io/draw-perfect-star/",
+        "name": "画一个完美的五角星",
+           "publisher": { 
+            "@id": "https://qiwei-ma.github.io/draw-perfect-star/#organization"
+        }
+    },
+        { 
+        "@type": "WebPage",
+        "@id": "https://qiwei-ma.github.io/draw-perfect-star/#webpage",
+        "url": "https://qiwei-ma.github.io/draw-perfect-star/",
+        "inLanguage": "zh-CN",
+        "name": "画一个完美的五角星 💯",
+        "isPartOf": {
+            "@id": "https://qiwei-ma.github.io/draw-perfect-star/#website"
+        },
+        "image": {
+            "@type": "ImageObject",
+            "@id": "https://qiwei-ma.github.io/draw-perfect-star/#primaryimage",
+            "url": "https://qiwei-ma.github.io/draw-perfect-star/icons/star-192x192.png",
+            "width": 192,
+            "height": 192
+        },
+        "primaryImageOfPage": {
+            "@id": "https://qiwei-ma.github.io/draw-perfect-star/#primaryimage"
+        },
+        "datePublished": "2025-01-01T00:00:00+00:00",
+        "description": "挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。"
+    }]
+        }
+        </script>    
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+    "@type": "Game",
+    "name": "画一个完美的五角星",
+    "description": "挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。免费在线玩，无需下载。",
+    "genre": "Drawing Game",
+    "gamePlatform": "Web Browser",
+    "url": "https://qiwei-ma.github.io/draw-perfect-star/",
+    "image": "https://qiwei-ma.github.io/draw-perfect-star/icons/star-192x192.png",
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "worstRating": "1",
+                "bestRating": "5",
+        "ratingValue": "4.9",
+        "ratingCount": "100"
+            }
+            }
+        </script>  
+</head>
+
+<body>
+<script>
+if('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+            console.log('Service Worker registered successfully:', registration);
+        })
+        .catch(error => {
+            console.log('Error in Service Worker registration:', error);
+        });
+    });
+}
+</script>
+
+<header>
+<div class="container">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <span class="logo-icon">⭐</span>
+                <span class="logo-text">画一个完美的五角星</span>
+            </a>
+</div>
+</div>
+</header>         
+
+<main>
+<div class="container">
+        <section class="hero">
+            <h1>画一个完美的五角星 ⭐</h1>
+            <p>挑战你的绘画技巧和稳定性！</p>
+            
+            <div class="game-preview" id="gamePreview">
+                <canvas id="previewCanvas" width="400" height="400"></canvas>
+</div> 
+</section>         
+</div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>© <span id="currentYear"></span> 画一个完美的五角星 | 免费在线游戏</p>
+        <ul class="footer-links">
+            <li><a href="game.html">开始游戏</a></li>
+            <li>|</li>
+            <li><a href="https://github.com/qiwei-ma/draw-perfect-star" target="_blank">GitHub</a></li>
+        </ul>
+</div>
+</footer>
+
+<script>
+// 预览动画
+const previewCanvas = document.getElementById('previewCanvas');
+const pCtx = previewCanvas.getContext('2d');
+
+function generatePerfectStar(centerX, centerY, outerRadius, innerRadius) {
+    const perfectPoints = [];
+    const angleStep = (Math.PI * 2) / 5;
+    const startAngle = -Math.PI / 2;
+    
+    for (let i = 0; i < 5; i++) {
+        const outerAngle = startAngle + angleStep * i;
+        perfectPoints.push({
+            x: centerX + Math.cos(outerAngle) * outerRadius,
+            y: centerY + Math.sin(outerAngle) * outerRadius
+        });
+        
+        const innerAngle = outerAngle + angleStep / 2;
+        perfectPoints.push({
+            x: centerX + Math.cos(innerAngle) * innerRadius,
+            y: centerY + Math.sin(innerAngle) * innerRadius
+        });
+    }
+    
+    return perfectPoints;
+}
+
+function drawPreview() {
+    pCtx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    pCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+    
+    const time = Date.now() / 1000;
+    const perfectStar = generatePerfectStar(
+        previewCanvas.width / 2,
+        previewCanvas.height / 2,
+        120,
+        48
+    );
+    
+    // 绘制发光的五角星
+    pCtx.shadowBlur = 20;
+    pCtx.shadowColor = '#ffd700';
+    pCtx.strokeStyle = '#ffd700';
+    pCtx.lineWidth = 3;
+    pCtx.beginPath();
+    
+    perfectStar.forEach((point, index) => {
+        if (index === 0) {
+            pCtx.moveTo(point.x, point.y);
+        } else {
+            pCtx.lineTo(point.x, point.y);
+        }
+    });
+    
+    pCtx.closePath();
+    pCtx.stroke();
+    
+    // 添加旋转效果
+    pCtx.save();
+    pCtx.translate(previewCanvas.width / 2, previewCanvas.height / 2);
+    pCtx.rotate(time * 0.5);
+    pCtx.translate(-previewCanvas.width / 2, -previewCanvas.height / 2);
+    
+    pCtx.shadowBlur = 0;
+    pCtx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+    pCtx.lineWidth = 1;
+    
+    const rotatedStar = generatePerfectStar(
+        previewCanvas.width / 2,
+        previewCanvas.height / 2,
+        140,
+        56
+    );
+    
+    pCtx.beginPath();
+    rotatedStar.forEach((point, index) => {
+        if (index === 0) {
+            pCtx.moveTo(point.x, point.y);
+        } else {
+            pCtx.lineTo(point.x, point.y);
+        }
+    });
+    pCtx.closePath();
+    pCtx.stroke();
+    
+    pCtx.restore();
+    
+    // 绘制若隐若现的"开始"文字
+    pCtx.save();
+    const opacity = (Math.sin(time * 2) + 1) / 2 * 0.6 + 0.3; // 0.3 到 0.9 之间变化
+    pCtx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+    pCtx.font = 'bold 48px "Nunito", sans-serif';
+    pCtx.textAlign = 'center';
+    pCtx.textBaseline = 'middle';
+    pCtx.shadowBlur = 15;
+    pCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+    pCtx.fillText('开始', previewCanvas.width / 2, previewCanvas.height / 2);
+    pCtx.restore();
+    
+    requestAnimationFrame(drawPreview);
+}
+
+drawPreview();
+
+// 点击画布区域开始游戏
+document.getElementById('gamePreview').addEventListener('click', function() {
+    window.location.href = 'game.html';
+});
+
+document.getElementById('currentYear').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

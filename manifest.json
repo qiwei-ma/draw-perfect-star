@@ -1,0 +1,38 @@
+{
+    "name": "画一个完美的五角星",
+    "short_name": "五角星游戏",
+    "theme_color": "#667eea",
+    "background_color": "#667eea",
+    "display": "standalone",
+    "orientation": "any",
+    "scope": "/",
+    "start_url": "/",
+    "description": "挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。",
+    "icons": [
+      {
+        "src": "/icons/star-64x64.png",
+        "sizes": "64x64",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/star-96x96.png",
+        "sizes": "96x96",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/star-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/star-256x256.png",
+        "sizes": "256x256",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/star-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }

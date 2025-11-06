@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画一个完美的五角星 💯</title>
+    <meta name="description" content="挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。">
+    <link rel="icon" type="image/png" sizes="64x64" href="icons/star-64x64.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="icons/star-96x96.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/star-192x192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/star-192x192.png">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        #gameCanvas {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .score-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 6rem;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(0,255,0,0.8);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .score-display.show {
+            opacity: 1;
+        }
+        
+        .new-best {
+            color: #ffd700 !important;
+            text-shadow: 0 0 20px rgba(255,215,0,0.8) !important;
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .best-score {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .instructions {
+            color: #333;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            #gameCanvas {
+                width: 90vw !important;
+                height: 90vw !important;
+            }
+            
+            .score-display {
+                font-size: 4rem;
+            }
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <canvas class="particles" id="particles"></canvas>
+    
+    <div class="container">
+        <h1>画一个完美的五角星 ⭐</h1>
+        <p class="subtitle">挑战你的绘画技巧！</p>
+        
+        <div style="position: relative;">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+            <div id="scoreDisplay" class="score-display"></div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="best-score">最高分: <span id="bestScore">0%</span></div>
+            <div class="instructions">
+                🖱️ 按住鼠标左键或触摸屏幕，尝试画出完美的五角星！<br>
+                🎯 越接近完美形状，得分越高！
+            </div>
+            <button class="btn" onclick="clearCanvas()">🔄 重新开始</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const bestScoreEl = document.getElementById('bestScore');
+        
+        let isDrawing = false;
+        let points = [];
+        let bestScore = localStorage.getItem('bestStarScore') || 0;
+        bestScoreEl.textContent = bestScore + '%';
+        
+        // 粒子背景
+        const particlesCanvas = document.getElementById('particles');
+        const pCtx = particlesCanvas.getContext('2d');
+        particlesCanvas.width = window.innerWidth;
+        particlesCanvas.height = window.innerHeight;
+        
+        class Particle {
+            constructor() {
+                this.x = Math.random() * particlesCanvas.width;
+                this.y = Math.random() * particlesCanvas.height;
+                this.size = Math.random() * 3;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.5;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                if (this.x < 0 || this.x > particlesCanvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > particlesCanvas.height) this.speedY *= -1;
+            }
+            
+            draw() {
+                pCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fill();
+            }
+        }
+        
+        const particles = Array.from({length: 50}, () => new Particle());
+        
+        function animateParticles() {
+            pCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        
+        animateParticles();
+        
+        // 生成完美五角星的点
+        function generatePerfectStar(centerX, centerY, outerRadius, innerRadius) {
+            const perfectPoints = [];
+            const angleStep = (Math.PI * 2) / 5;
+            const startAngle = -Math.PI / 2;
+            
+            for (let i = 0; i < 5; i++) {
+                // 外点
+                const outerAngle = startAngle + angleStep * i;
+                perfectPoints.push({
+                    x: centerX + Math.cos(outerAngle) * outerRadius,
+                    y: centerY + Math.sin(outerAngle) * outerRadius
+                });
+                
+                // 内点
+                const innerAngle = outerAngle + angleStep / 2;
+                perfectPoints.push({
+                    x: centerX + Math.cos(innerAngle) * innerRadius,
+                    y: centerY + Math.sin(innerAngle) * innerRadius
+                });
+            }
+            
+            return perfectPoints;
+        }
+        
+        const perfectStar = generatePerfectStar(canvas.width / 2, canvas.height / 2, 200, 80);
+        
+        // 绘制参考五角星（虚线）
+        function drawReferenceStar() {
+            ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            
+            perfectStar.forEach((point, index) => {
+                if (index === 0) {
+                    ctx.moveTo(point.x, point.y);
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            });
+            
+            ctx.closePath();
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+        
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            points = [];
+            scoreDisplay.classList.remove('show');
+            scoreDisplay.classList.remove('new-best');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawReferenceStar();
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const pos = getMousePos(e);
+            points.push(pos);
+            
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            if (points.length > 1) {
+                const lastPoint = points[points.length - 2];
+                ctx.beginPath();
+                ctx.moveTo(lastPoint.x, lastPoint.y);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+        }
+        
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            isDrawing = false;
+            
+            if (points.length < 10) {
+                // 静默清除，不显示提示
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawReferenceStar();
+                return;
+            }
+            
+            const score = calculateScore();
+            displayScore(score);
+        }
+        
+        function calculateScore() {
+            if (points.length < 10) return 0;
+            
+            // 计算用户绘制的形状与完美五角星的相似度
+            const samplePoints = sampleUserPoints(points, perfectStar.length);
+            
+            let totalDistance = 0;
+            let maxPossibleDistance = 0;
+            
+            for (let i = 0; i < perfectStar.length; i++) {
+                const perfect = perfectStar[i];
+                const user = samplePoints[i];
+                
+                const distance = Math.sqrt(
+                    Math.pow(perfect.x - user.x, 2) + 
+                    Math.pow(perfect.y - user.y, 2)
+                );
+                
+                totalDistance += distance;
+                maxPossibleDistance += 300; // 降低严格度，从200改为300
+            }
+            
+            // 使用更宽松的评分曲线
+            const rawAccuracy = Math.max(0, 100 - (totalDistance / maxPossibleDistance * 100));
+            // 应用平滑曲线，提高得分
+            const accuracy = Math.pow(rawAccuracy / 100, 0.7) * 100;
+            return Math.round(accuracy * 10) / 10;
+        }
+        
+        function sampleUserPoints(userPoints, targetCount) {
+            const sampled = [];
+            const step = userPoints.length / targetCount;
+            
+            for (let i = 0; i < targetCount; i++) {
+                const index = Math.min(Math.floor(i * step), userPoints.length - 1);
+                sampled.push(userPoints[index]);
+            }
+            
+            return sampled;
+        }
+        
+        function displayScore(score) {
+            scoreDisplay.textContent = score + '%';
+            
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('bestStarScore', bestScore);
+                bestScoreEl.textContent = bestScore + '%';
+                scoreDisplay.classList.add('new-best');
+                scoreDisplay.textContent = score + '% 🎉\n新纪录!';
+            }
+            
+            scoreDisplay.classList.add('show');
+            
+            // 添加彩色效果
+            if (score >= 95) {
+                ctx.strokeStyle = '#ffd700';
+            } else if (score >= 85) {
+                ctx.strokeStyle = '#00ff00';
+            } else if (score >= 70) {
+                ctx.strokeStyle = '#ffaa00';
+            } else {
+                ctx.strokeStyle = '#ff4444';
+            }
+            
+            // 重新绘制用户的线条
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            points.forEach((point, index) => {
+                if (index === 0) {
+                    ctx.moveTo(point.x, point.y);
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            });
+            ctx.stroke();
+        }
+        
+        // 事件监听
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+        
+        // 初始绘制
+        drawReferenceStar();
+        
+        // 清除画布函数
+        function clearCanvas() {
+            points = [];
+            isDrawing = false;
+            scoreDisplay.classList.remove('show');
+            scoreDisplay.classList.remove('new-best');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawReferenceStar();
+        }
+        
+        // 窗口大小调整
+        window.addEventListener('resize', () => {
+            particlesCanvas.width = window.innerWidth;
+            particlesCanvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
+

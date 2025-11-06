@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://qiwei-ma.github.io/draw-perfect-star/sitemap.xml
