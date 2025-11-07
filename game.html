@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>画一个完美的五角星 💯</title>
-    <meta name="description" content="挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。">
+    <title>Draw a Perfect Star 💯</title>
+    <meta name="description" content="Challenge yourself to draw a perfect star! Test your drawing skills and stability.">
     <link rel="icon" type="image/png" sizes="64x64" href="icons/star-64x64.png">
     <link rel="icon" type="image/png" sizes="96x96" href="icons/star-96x96.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/star-192x192.png">
@@ -125,6 +125,29 @@
             transform: translateY(0);
         }
         
+        .lang-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 8px 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .lang-switch:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8rem;
@@ -142,6 +165,13 @@
             .score-display {
                 font-size: 4rem;
             }
+            
+            .lang-switch {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
         }
         
         .particles {
@@ -156,11 +186,13 @@
     </style>
 </head>
 <body>
+    <div class="lang-switch" id="langSwitch" onclick="toggleLanguage()">中文</div>
+    
     <canvas class="particles" id="particles"></canvas>
     
     <div class="container">
-        <h1>画一个完美的五角星 ⭐</h1>
-        <p class="subtitle">加油！</p>
+        <h1 id="title">Draw a Perfect Star ⭐</h1>
+        <p class="subtitle" id="subtitle">Good luck!</p>
         
         <div style="position: relative;">
             <canvas id="gameCanvas" width="600" height="600"></canvas>
@@ -168,25 +200,67 @@
         </div>
         
         <div class="info-panel">
-            <div class="best-score">最高分: <span id="bestScore">0%</span></div>
-            <div class="instructions">
-                🖱️ 按住鼠标左键或触摸屏幕，尝试画出完美的五角星！<br>
-                🎯 越接近完美形状，得分越高！
+            <div class="best-score" id="bestScoreLabel">Best Score: <span id="bestScore">0%</span></div>
+            <div class="instructions" id="instructions">
+                🖱️ Hold down the mouse button or touch the screen to draw a perfect star!<br>
+                🎯 The closer to the perfect shape, the higher the score!
             </div>
             <!-- <button class="btn" onclick="clearCanvas()">🔄 重新开始</button> -->
         </div>
     </div>
 
     <script>
+        // Language data
+        const translations = {
+            en: {
+                title: 'Draw a Perfect Star ⭐',
+                subtitle: 'Good luck!',
+                bestScore: 'Best Score: ',
+                instructions: '🖱️ Hold down the mouse button or touch the screen to draw a perfect star!<br>🎯 The closer to the perfect shape, the higher the score!',
+                newRecord: '🎉\nNew Record!',
+                htmlTitle: 'Draw a Perfect Star 💯',
+                langButton: 'English'
+            },
+            zh: {
+                title: '画一个完美的五角星 ⭐',
+                subtitle: '加油！',
+                bestScore: '最高分: ',
+                instructions: '🖱️ 按住鼠标左键或触摸屏幕，尝试画出完美的五角星！<br>🎯 越接近完美形状，得分越高！',
+                newRecord: '🎉\n新纪录!',
+                htmlTitle: '画一个完美的五角星 💯',
+                langButton: '中文'
+            }
+        };
+        
+        let currentLang = localStorage.getItem('preferredLanguage') || 'en';
+        
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            localStorage.setItem('preferredLanguage', currentLang);
+            updateLanguage();
+        }
+        
+        function updateLanguage() {
+            const t = translations[currentLang];
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('bestScoreLabel').innerHTML = t.bestScore + '<span id="bestScore">' + bestScore + '%</span>';
+            document.getElementById('instructions').innerHTML = t.instructions;
+            document.getElementById('langSwitch').textContent = t.langButton;
+            document.title = t.htmlTitle;
+            document.documentElement.lang = currentLang;
+        }
+        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('scoreDisplay');
-        const bestScoreEl = document.getElementById('bestScore');
         
         let isDrawing = false;
         let points = [];
         let bestScore = localStorage.getItem('bestStarScore') || 0;
-        bestScoreEl.textContent = bestScore + '%';
+        
+        // Initialize language
+        updateLanguage();
         
         // 粒子背景
         const particlesCanvas = document.getElementById('particles');
@@ -345,30 +419,260 @@
         function calculateScore() {
             if (points.length < 10) return 0;
             
+            // 提取凸包，忽略内部线条
+            const convexHull = computeConvexHull(points);
+            
+            if (convexHull.length < 5) return 0;
+            
             // 先将用户绘制的形状归一化（自适应大小和位置）
-            const normalizedUser = normalizeShape(points);
+            const normalizedUser = normalizeShape(convexHull);
             const normalizedPerfect = normalizeShape(perfectStar);
             
-            // 1. 形状闭合度 (20%)
+            // 0. 五角星特征检测 - 必须有5个明显的外凸点
+            const starFeatureScore = detectStarFeature(convexHull);
+            if (starFeatureScore < 30) return Math.min(starFeatureScore, 30); // 如果不像五角星，最多给30分
+            
+            // 1. 形状闭合度 (15%)
             const closureScore = calculateClosureScore(points);
             
-            // 2. 路径覆盖度 (25%) - 检查是否画了完整的五角星
+            // 2. 路径覆盖度 (20%) - 检查是否画了完整的五角星
             const coverageScore = calculateCoverageScore(normalizedUser, normalizedPerfect);
             
-            // 3. 形状相似度 (40%) - 归一化后的距离匹配
+            // 3. 形状相似度 (45%) - 归一化后的距离匹配（增加权重）
             const shapeScore = calculateShapeScore(normalizedUser, normalizedPerfect);
             
-            // 4. 角度准确度 (15%) - 检查拐点角度
-            const angleScore = calculateAngleScore(points);
+            // 4. 角度准确度 (20%) - 检查拐点角度（增加权重）
+            const angleScore = calculateAngleScore(convexHull);
             
             // 加权总分
             const finalScore = 
-                closureScore * 0.20 + 
-                coverageScore * 0.25 + 
-                shapeScore * 0.40 + 
-                angleScore * 0.15;
+                closureScore * 0.15 + 
+                coverageScore * 0.20 + 
+                shapeScore * 0.45 + 
+                angleScore * 0.20;
             
-            return Math.round(Math.max(0, Math.min(100, finalScore)) * 10) / 10;
+            // 应用五角星特征得分的影响
+            const adjustedScore = finalScore * (starFeatureScore / 100);
+            
+            return Math.round(Math.max(0, Math.min(100, adjustedScore)) * 10) / 10;
+        }
+        
+        // 计算凸包（Graham扫描算法）
+        function computeConvexHull(points) {
+            if (points.length < 3) return points;
+            
+            // 简化点集（减少计算量）
+            const simplified = simplifyPath(points, 5);
+            
+            // 找到最低点（y最大，如果相同则x最小）
+            let lowest = simplified[0];
+            let lowestIndex = 0;
+            for (let i = 1; i < simplified.length; i++) {
+                if (simplified[i].y > lowest.y || 
+                    (simplified[i].y === lowest.y && simplified[i].x < lowest.x)) {
+                    lowest = simplified[i];
+                    lowestIndex = i;
+                }
+            }
+            
+            // 按极角排序
+            const sorted = simplified.slice();
+            sorted.splice(lowestIndex, 1);
+            sorted.sort((a, b) => {
+                const angleA = Math.atan2(a.y - lowest.y, a.x - lowest.x);
+                const angleB = Math.atan2(b.y - lowest.y, b.x - lowest.x);
+                if (angleA !== angleB) return angleA - angleB;
+                // 如果角度相同，保留距离更远的点
+                const distA = Math.pow(a.x - lowest.x, 2) + Math.pow(a.y - lowest.y, 2);
+                const distB = Math.pow(b.x - lowest.x, 2) + Math.pow(b.y - lowest.y, 2);
+                return distB - distA;
+            });
+            
+            sorted.unshift(lowest);
+            
+            // Graham扫描
+            const hull = [sorted[0], sorted[1]];
+            
+            for (let i = 2; i < sorted.length; i++) {
+                while (hull.length >= 2) {
+                    const p1 = hull[hull.length - 2];
+                    const p2 = hull[hull.length - 1];
+                    const p3 = sorted[i];
+                    
+                    // 计算叉积
+                    const cross = (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+                    
+                    if (cross <= 0) {
+                        hull.pop();
+                    } else {
+                        break;
+                    }
+                }
+                hull.push(sorted[i]);
+            }
+            
+            return hull;
+        }
+        
+        // 简化路径（道格拉斯-普克算法）
+        function simplifyPath(points, tolerance) {
+            if (points.length <= 2) return points;
+            
+            // 找到距离起点和终点连线最远的点
+            let maxDistance = 0;
+            let maxIndex = 0;
+            const start = points[0];
+            const end = points[points.length - 1];
+            
+            for (let i = 1; i < points.length - 1; i++) {
+                const distance = perpendicularDistance(points[i], start, end);
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                    maxIndex = i;
+                }
+            }
+            
+            // 如果最大距离大于阈值，递归简化
+            if (maxDistance > tolerance) {
+                const left = simplifyPath(points.slice(0, maxIndex + 1), tolerance);
+                const right = simplifyPath(points.slice(maxIndex), tolerance);
+                return left.slice(0, -1).concat(right);
+            } else {
+                return [start, end];
+            }
+        }
+        
+        // 点到线段的垂直距离
+        function perpendicularDistance(point, lineStart, lineEnd) {
+            const dx = lineEnd.x - lineStart.x;
+            const dy = lineEnd.y - lineStart.y;
+            
+            if (dx === 0 && dy === 0) {
+                return Math.sqrt(
+                    Math.pow(point.x - lineStart.x, 2) + 
+                    Math.pow(point.y - lineStart.y, 2)
+                );
+            }
+            
+            const t = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / 
+                      (dx * dx + dy * dy);
+            
+            if (t < 0) {
+                return Math.sqrt(
+                    Math.pow(point.x - lineStart.x, 2) + 
+                    Math.pow(point.y - lineStart.y, 2)
+                );
+            } else if (t > 1) {
+                return Math.sqrt(
+                    Math.pow(point.x - lineEnd.x, 2) + 
+                    Math.pow(point.y - lineEnd.y, 2)
+                );
+            }
+            
+            const projX = lineStart.x + t * dx;
+            const projY = lineStart.y + t * dy;
+            
+            return Math.sqrt(
+                Math.pow(point.x - projX, 2) + 
+                Math.pow(point.y - projY, 2)
+            );
+        }
+        
+        // 检测五角星特征（0-100分）
+        function detectStarFeature(hull) {
+            if (hull.length < 8) return 0;
+            
+            // 检测凸点和凹点
+            const corners = [];
+            const n = hull.length;
+            
+            for (let i = 0; i < n; i++) {
+                const prev = hull[(i - 1 + n) % n];
+                const curr = hull[i];
+                const next = hull[(i + 1) % n];
+                
+                // 计算角度
+                const angle1 = Math.atan2(curr.y - prev.y, curr.x - prev.x);
+                const angle2 = Math.atan2(next.y - curr.y, next.x - curr.x);
+                
+                let angleDiff = angle2 - angle1;
+                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                
+                // 如果角度变化明显（大于30度），记录为拐点
+                if (Math.abs(angleDiff) > Math.PI / 6) {
+                    corners.push({
+                        point: curr,
+                        angle: angleDiff,
+                        isConvex: angleDiff < 0 // 顺时针为凸点
+                    });
+                }
+            }
+            
+            // 合并相近的拐点
+            const mergedCorners = [];
+            let i = 0;
+            while (i < corners.length) {
+                let j = i + 1;
+                while (j < corners.length && j - i < 5) {
+                    j++;
+                }
+                if (j - i > 0) {
+                    mergedCorners.push(corners[Math.floor((i + j - 1) / 2)]);
+                }
+                i = j;
+            }
+            
+            // 统计凸点和凹点
+            const convexPoints = mergedCorners.filter(c => c.isConvex).length;
+            const concavePoints = mergedCorners.filter(c => !c.isConvex).length;
+            
+            // 五角星应该有5个凸点（外尖）和5个凹点（内角）
+            const convexScore = Math.max(0, 100 - Math.abs(convexPoints - 5) * 15);
+            const concaveScore = Math.max(0, 100 - Math.abs(concavePoints - 5) * 15);
+            
+            // 检查角度是否均匀分布
+            const angleUniformity = checkAngleUniformity(mergedCorners.filter(c => c.isConvex));
+            
+            return (convexScore * 0.4 + concaveScore * 0.3 + angleUniformity * 0.3);
+        }
+        
+        // 检查角度均匀性
+        function checkAngleUniformity(convexPoints) {
+            if (convexPoints.length < 3) return 0;
+            
+            // 计算质心
+            let centerX = 0, centerY = 0;
+            convexPoints.forEach(c => {
+                centerX += c.point.x;
+                centerY += c.point.y;
+            });
+            centerX /= convexPoints.length;
+            centerY /= convexPoints.length;
+            
+            // 计算每个点相对于质心的角度
+            const angles = convexPoints.map(c => 
+                Math.atan2(c.point.y - centerY, c.point.x - centerX)
+            ).sort((a, b) => a - b);
+            
+            // 计算相邻角度差
+            const gaps = [];
+            for (let i = 0; i < angles.length; i++) {
+                const nextAngle = i < angles.length - 1 ? angles[i + 1] : angles[0] + 2 * Math.PI;
+                gaps.push(nextAngle - angles[i]);
+            }
+            
+            // 理想情况下，5个点的角度间隔应该是72度（2π/5）
+            const idealGap = (2 * Math.PI) / convexPoints.length;
+            let totalDeviation = 0;
+            gaps.forEach(gap => {
+                totalDeviation += Math.abs(gap - idealGap);
+            });
+            
+            const avgDeviation = totalDeviation / gaps.length;
+            const uniformity = Math.max(0, 1 - avgDeviation / idealGap);
+            
+            return Math.pow(uniformity, 0.7) * 100;
         }
         
         // 归一化形状：将形状缩放到统一大小，并居中
@@ -424,16 +728,21 @@
             }
             const avgSegmentLength = totalLength / (points.length - 1);
             
-            // 闭合距离应该小于平均线段长度的3倍
-            const maxAllowedDistance = avgSegmentLength * 3;
-            const closureRatio = Math.max(0, 1 - distance / maxAllowedDistance);
+            // 使用更宽松的评分曲线
+            // 完全闭合（distance=0）得100分
+            // distance = avgSegmentLength 得约85分
+            // distance = avgSegmentLength * 3 得约50分
+            // distance = avgSegmentLength * 5 得约30分
+            // 使用指数衰减函数，即使没接上也能得到一定分数
+            const normalizedDistance = distance / avgSegmentLength;
+            const closureScore = 100 * Math.exp(-normalizedDistance / 3);
             
-            return closureRatio * 100;
+            return Math.max(20, closureScore); // 最少给20分，鼓励尝试
         }
         
-        // 2. 路径覆盖度评分 (0-100)
+        // 2. 路径覆盖度评分 (0-100) - 更严格
         function calculateCoverageScore(normalizedUser, normalizedPerfect) {
-            if (normalizedUser.length < 10) return 0;
+            if (normalizedUser.length < 5) return 0;
             
             // 将完美五角星分成10个关键区域（5个外顶点 + 5个内顶点）
             const keyPoints = [];
@@ -443,7 +752,7 @@
             
             // 检查用户路径是否接近这些关键点
             let coveredPoints = 0;
-            const threshold = 0.15; // 归一化后的阈值
+            const threshold = 0.12; // 更严格的阈值（从0.15降到0.12）
             
             keyPoints.forEach(keyPoint => {
                 let minDistance = Infinity;
@@ -460,12 +769,14 @@
                 }
             });
             
-            return (coveredPoints / keyPoints.length) * 100;
+            const coverageRatio = coveredPoints / keyPoints.length;
+            // 应用非线性曲线，使得只有真正覆盖良好时才能得高分
+            return Math.pow(coverageRatio, 1.5) * 100;
         }
         
-        // 3. 形状相似度评分 (0-100)
+        // 3. 形状相似度评分 (0-100) - 更严格
         function calculateShapeScore(normalizedUser, normalizedPerfect) {
-            if (normalizedUser.length < 10) return 0;
+            if (normalizedUser.length < 5) return 0;
             
             // 采样到相同数量的点
             const sampleCount = 50;
@@ -479,7 +790,7 @@
                 let minDist = Infinity;
                 
                 // 为每个完美点找到最近的用户点（允许一定的顺序偏差）
-                const searchRange = Math.floor(sampleCount * 0.2); // 允许20%的偏差
+                const searchRange = Math.floor(sampleCount * 0.15); // 更严格：从20%降到15%
                 for (let j = Math.max(0, i - searchRange); j < Math.min(sampleCount, i + searchRange + 1); j++) {
                     const dist = Math.sqrt(
                         Math.pow(sampledPerfect[i].x - sampledUser[j].x, 2) + 
@@ -493,27 +804,37 @@
             
             // 归一化距离
             const avgDistance = totalDistance / sampleCount;
-            const maxAllowedDistance = 0.3; // 归一化后的最大容忍距离
+            const maxAllowedDistance = 0.2; // 更严格：从0.3降到0.2
             
             const similarity = Math.max(0, 1 - avgDistance / maxAllowedDistance);
-            return Math.pow(similarity, 0.8) * 100; // 应用曲线使评分更平滑
+            return Math.pow(similarity, 1.2) * 100; // 更严格的曲线：从0.8改为1.2
         }
         
-        // 4. 角度准确度评分 (0-100)
+        // 4. 角度准确度评分 (0-100) - 更严格
         function calculateAngleScore(points) {
-            if (points.length < 20) return 0;
+            if (points.length < 5) return 0;
             
             // 检测拐点（方向变化大的点）
             const corners = detectCorners(points);
             
             // 五角星应该有10个主要拐点（5个外角 + 5个内角）
             const expectedCorners = 10;
-            const cornerCountScore = Math.min(corners.length / expectedCorners, 1.5) * 50;
+            const cornerDiff = Math.abs(corners.length - expectedCorners);
+            
+            // 更严格的拐点数量评分
+            let cornerCountScore = 0;
+            if (cornerDiff === 0) {
+                cornerCountScore = 100;
+            } else if (cornerDiff <= 2) {
+                cornerCountScore = 80 - cornerDiff * 15;
+            } else {
+                cornerCountScore = Math.max(0, 50 - cornerDiff * 10);
+            }
             
             // 检查拐点的角度分布
-            const angleDistributionScore = analyzeAngleDistribution(corners) * 50;
+            const angleDistributionScore = analyzeAngleDistribution(corners);
             
-            return cornerCountScore + angleDistributionScore;
+            return cornerCountScore * 0.5 + angleDistributionScore * 0.5;
         }
         
         // 检测拐点
@@ -618,9 +939,9 @@
             if (score > bestScore) {
                 bestScore = score;
                 localStorage.setItem('bestStarScore', bestScore);
-                bestScoreEl.textContent = bestScore + '%';
+                document.getElementById('bestScoreLabel').innerHTML = translations[currentLang].bestScore + '<span id="bestScore">' + bestScore + '%</span>';
                 scoreDisplay.classList.add('new-best');
-                scoreDisplay.textContent = score + '% 🎉\n新纪录!';
+                scoreDisplay.textContent = score + '% ' + translations[currentLang].newRecord;
             }
             
             scoreDisplay.classList.add('show');

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN" prefix="og: https://ogp.me/ns#">
+<html lang="en" prefix="og: https://ogp.me/ns#">
 <head>
 <meta charset="utf-8" />
-<title>画一个完美的五角星 💯 | 在线绘画游戏</title>
+<title>Draw a Perfect Star 💯 | Online Drawing Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。免费在线玩，无需下载。" />
-<meta property="og:title" content="画一个完美的五角星 💯">
-<meta property="og:description" content="挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。">    
-<meta property="og:locale" content="zh-CN">
+<meta name="description" content="Challenge yourself to draw a perfect star! Test your drawing skills and stability. Play online for free, no download required." />
+<meta property="og:title" content="Draw a Perfect Star 💯">
+<meta property="og:description" content="Challenge yourself to draw a perfect star! Test your drawing skills and stability.">    
+<meta property="og:locale" content="en_US">
 <meta name="robots" content="index, follow" />
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://qiwei-ma.github.io/draw-perfect-star/">
@@ -195,6 +195,29 @@ footer a:hover {
     display: inline;
 }
 
+.lang-switch {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 25px;
+    padding: 8px 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.lang-switch:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
 @media (max-width: 768px) {
     .hero h1 {
         font-size: 2rem;
@@ -215,6 +238,13 @@ footer a:hover {
     
     .features {
         grid-template-columns: 1fr;
+    }
+    
+    .lang-switch {
+        top: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
     }
 }
 </style>    
@@ -283,6 +313,8 @@ footer a:hover {
 </head>
 
 <body>
+<div class="lang-switch" id="langSwitch" onclick="toggleLanguage()">中文</div>
+
 <script>
 if('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -302,7 +334,7 @@ if('serviceWorker' in navigator) {
         <div class="header-content">
             <a href="/" class="logo">
                 <span class="logo-icon">⭐</span>
-                <span class="logo-text">画一个完美的五角星</span>
+                <span class="logo-text" id="logoText">Draw a Perfect Star</span>
             </a>
 </div>
 </div>
@@ -311,8 +343,8 @@ if('serviceWorker' in navigator) {
 <main>
 <div class="container">
         <section class="hero">
-            <h1>画一个完美的五角星 ⭐</h1>
-            <p>挑战你的绘画技巧和稳定性！</p>
+            <h1 id="mainTitle">Draw a Perfect Star ⭐</h1>
+            <p id="mainSubtitle">Challenge your drawing skills and stability!</p>
             
             <div class="game-preview" id="gamePreview">
                 <canvas id="previewCanvas" width="400" height="400"></canvas>
@@ -323,9 +355,9 @@ if('serviceWorker' in navigator) {
 
 <footer>
     <div class="container">
-        <p>© <span id="currentYear"></span> 画一个完美的五角星 | 免费在线游戏</p>
+        <p id="footerText">© <span id="currentYear"></span> Draw a Perfect Star | Free Online Game</p>
         <ul class="footer-links">
-            <li><a href="game.html">开始游戏</a></li>
+            <li><a href="game.html" id="startGameLink">Start Game</a></li>
             <li>|</li>
             <li><a href="https://github.com/qiwei-ma/draw-perfect-star" target="_blank">GitHub</a></li>
         </ul>
@@ -333,6 +365,71 @@ if('serviceWorker' in navigator) {
 </footer>
 
 <script>
+// Language data
+const translations = {
+    en: {
+        htmlTitle: 'Draw a Perfect Star 💯 | Online Drawing Game',
+        logoText: 'Draw a Perfect Star',
+        mainTitle: 'Draw a Perfect Star ⭐',
+        mainSubtitle: 'Challenge your drawing skills and stability!',
+        startText: 'Start',
+        footerText: 'Draw a Perfect Star | Free Online Game',
+        startGameLink: 'Start Game',
+        langButton: 'English'
+    },
+    zh: {
+        htmlTitle: '画一个完美的五角星 💯 | 在线绘画游戏',
+        logoText: '画一个完美的五角星',
+        mainTitle: '画一个完美的五角星 ⭐',
+        mainSubtitle: '挑战你的绘画技巧和稳定性！',
+        startText: '开始',
+        footerText: '画一个完美的五角星 | 免费在线游戏',
+        startGameLink: '开始游戏',
+        langButton: '中文'
+    }
+};
+
+let currentLang = localStorage.getItem('preferredLanguage') || 'en';
+
+function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'zh' : 'en';
+    localStorage.setItem('preferredLanguage', currentLang);
+    updateLanguage();
+}
+
+function updateLanguage() {
+    const t = translations[currentLang];
+    document.title = t.htmlTitle;
+    document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-CN';
+    document.getElementById('logoText').textContent = t.logoText;
+    document.getElementById('mainTitle').textContent = t.mainTitle;
+    document.getElementById('mainSubtitle').textContent = t.mainSubtitle;
+    document.getElementById('footerText').innerHTML = '© <span id="currentYear">' + new Date().getFullYear() + '</span> ' + t.footerText;
+    document.getElementById('startGameLink').textContent = t.startGameLink;
+    document.getElementById('langSwitch').textContent = t.langButton;
+    
+    // Update meta tags
+    const descMeta = document.querySelector('meta[name="description"]');
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    const ogLocale = document.querySelector('meta[property="og:locale"]');
+    
+    if (currentLang === 'zh') {
+        if (descMeta) descMeta.content = '挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。免费在线玩，无需下载。';
+        if (ogTitle) ogTitle.content = '画一个完美的五角星 💯';
+        if (ogDesc) ogDesc.content = '挑战自己，画出一个完美的五角星！测试你的绘画技巧和稳定性。';
+        if (ogLocale) ogLocale.content = 'zh-CN';
+    } else {
+        if (descMeta) descMeta.content = 'Challenge yourself to draw a perfect star! Test your drawing skills and stability. Play online for free, no download required.';
+        if (ogTitle) ogTitle.content = 'Draw a Perfect Star 💯';
+        if (ogDesc) ogDesc.content = 'Challenge yourself to draw a perfect star! Test your drawing skills and stability.';
+        if (ogLocale) ogLocale.content = 'en_US';
+    }
+}
+
+// Initialize language on page load
+updateLanguage();
+
 // 预览动画
 const previewCanvas = document.getElementById('previewCanvas');
 const pCtx = previewCanvas.getContext('2d');
@@ -428,7 +525,8 @@ function drawPreview() {
     pCtx.textBaseline = 'middle';
     pCtx.shadowBlur = 15;
     pCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-    pCtx.fillText('开始', previewCanvas.width / 2, previewCanvas.height / 2);
+    const startText = translations[currentLang].startText;
+    pCtx.fillText(startText, previewCanvas.width / 2, previewCanvas.height / 2);
     pCtx.restore();
     
     requestAnimationFrame(drawPreview);
